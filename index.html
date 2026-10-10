@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Batu Gunting Kertas — 2 Pemain</title>
+<style>
+:root{--bg:#101827;--panel:#182438;--soft:#22324b;--text:#f4f7fb;--muted:#aab7ca;--mint:#70e1c1;--purple:#9b8cff;--gold:#ffd47b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;padding:20px;display:grid;place-items:center;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--text);background:radial-gradient(circle at 10% 10%,#70e1c122,transparent 28rem),radial-gradient(circle at 90% 90%,#9b8cff26,transparent 30rem),var(--bg)}
+main{width:min(100%,760px)}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:center;color:var(--muted);font-size:.85rem;margin-bottom:18px}
+.tag{border:1px solid #70e1c155;border-radius:99px;padding:6px 10px;color:var(--mint)}
+header{text-align:center;margin-bottom:22px}
+.logo{font-size:clamp(2.5rem,8vw,4rem)}
+h1{font-size:clamp(1.8rem,5vw,2.6rem);letter-spacing:-.04em;margin:0}
+header p{color:var(--muted);margin:8px 0 0}
+.scores{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.score,.panel{background:#182438ed;border:1px solid #ffffff12;border-radius:20px}
+.score{text-align:center;padding:15px}
+.score span{display:block;color:var(--muted);font-size:.9rem}
+.score strong{display:block;font-size:2rem;margin-top:3px}
+.panel{padding:clamp(16px,4vw,28px);box-shadow:0 20px 70px #0003}
+.status{text-align:center;padding:15px;border-radius:15px;background:#ffffff09;margin-bottom:18px;min-height:70px;display:grid;place-content:center;gap:4px}
+.status strong{font-size:1.1rem}.status p{margin:0;color:var(--muted);font-size:.9rem}
+.status.win strong{color:var(--mint)}.status.draw strong{color:var(--gold)}
+.players{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px}
+.player{background:#22324b;border:1px solid #ffffff10;border-radius:17px;padding:15px 10px;text-align:center}
+.player h2{font-size:1rem;margin:0 0 8px}
+.hand{font-size:3rem;min-height:60px;display:grid;place-items:center}
+.small{font-size:.85rem;color:var(--muted);min-height:21px}
+h3{text-align:center;font-size:1rem;margin:16px 0 12px}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.choice{background:#22324b;color:var(--text);border:1px solid #ffffff17;border-radius:15px;padding:12px 4px;font:inherit;cursor:pointer;transition:.15s}
+.choice:hover:not(:disabled){border-color:var(--mint);transform:translateY(-2px)}
+/* Jangan tampilkan efek hover/fokus yang bisa membocorkan pilihan saat giliran Pemain 2. */
+.choices.privacy-mode .choice:hover{border-color:#ffffff17;transform:none}
+.choices.privacy-mode .choice:focus{outline:none}
+.choice:focus-visible,.btn:focus-visible{outline:3px solid var(--mint);outline-offset:3px}
+.choice .emoji{display:block;font-size:2rem;margin-bottom:4px}
+.choice:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.actions{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:17px}
+.btn{border:1px solid #9b8cff88;color:#e0dbff;background:transparent;border-radius:99px;padding:10px 16px;font:inherit;font-weight:650;cursor:pointer}
+.btn.primary{background:var(--mint);color:#10231f;border-color:var(--mint)}
+.btn:hover{filter:brightness(1.08)}
+.rules{text-align:center;color:var(--muted);font-size:.83rem;line-height:1.6;margin:17px 4px 0}
+footer{text-align:center;color:#8190a7;font-size:.78rem;margin-top:16px}
+@media(max-width:420px){body{padding:13px}.panel{padding:13px}.player{padding:12px 5px}.choice .emoji{font-size:1.8rem}.top{font-size:.76rem}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top"><span>🎮 GAME TRADISIONAL</span><span class="tag">👥 2 Pemain · 1 Perangkat</span></div>
+  <header>
+    <div class="logo" aria-hidden="true">✊ ✌️ ✋</div>
+    <h1>Batu, Gunting, Kertas</h1>
+    <p>Ajak temanmu dan buktikan siapa jagoannya!</p>
+  </header>
+
+  <section class="scores" aria-label="Papan skor">
+    <div class="score"><span>🙋 Pemain 1</span><strong id="score1">0</strong></div>
+    <div class="score"><span>🙋 Pemain 2</span><strong id="score2">0</strong></div>
+  </section>
+
+  <section class="panel">
+    <div class="status" id="status" role="status" aria-live="polite">
+      <strong>Siap bertanding?</strong><p>Tekan mulai untuk memulai ronde pertama.</p>
+    </div>
+
+    <div class="players">
+      <div class="player">
+        <h2>🟢 PEMAIN 1</h2>
+        <div class="hand" id="hand1">❔</div>
+        <div class="small" id="label1">Belum memilih</div>
+      </div>
+      <div class="player">
+        <h2>🟣 PEMAIN 2</h2>
+        <div class="hand" id="hand2">❔</div>
+        <div class="small" id="label2">Belum memilih</div>
+      </div>
+    </div>
+
+    <h3 id="turnTitle">Tekan mulai untuk bermain</h3>
+    <div class="choices" id="choices">
+      <button class="choice" data-choice="batu"><span class="emoji">✊</span>Batu</button>
+      <button class="choice" data-choice="gunting"><span class="emoji">✌️</span>Gunting</button>
+      <button class="choice" data-choice="kertas"><span class="emoji">✋</span>Kertas</button>
+    </div>
+    <div class="actions">
+      <button class="btn primary" id="startBtn">▶ Mulai Ronde</button>
+      <button class="btn" id="resetBtn">↻ Reset Skor</button>
+    </div>
+  </section>
+  <p class="rules"><strong>Aturan:</strong> Batu mengalahkan gunting · Gunting mengalahkan kertas · Kertas mengalahkan batu. Pilihan pemain disembunyikan sampai keduanya memilih.</p>
+  <footer>Dibuat dengan HTML, CSS, dan JavaScript · Game edukasi</footer>
+</main>
+<script>
+const options={
+  batu:{emoji:"✊",label:"Batu"},
+  gunting:{emoji:"✌️",label:"Gunting"},
+  kertas:{emoji:"✋",label:"Kertas"}
+};
+let score1=0,score2=0,turn=0,choice1=null,choice2=null,roundActive=false;
+const $=id=>document.getElementById(id);
+const buttons=[...document.querySelectorAll(".choice")];
+
+function setStatus(title,message,type=""){
+  $("status").className="status"+(type?" "+type:"");
+  $("status").replaceChildren();
+  const strong=document.createElement("strong");strong.textContent=title;
+  const p=document.createElement("p");p.textContent=message;
+  $("status").append(strong,p);
+}
+function setButtonsEnabled(enabled){buttons.forEach(b=>b.disabled=!enabled)}
+function beginRound(){
+  choice1=null;choice2=null;turn=1;roundActive=true;
+  $("hand1").textContent="❔";$("hand2").textContent="❔";
+  $("label1").textContent="Menunggu pilihan";$("label2").textContent="Menunggu pilihan";
+  $("turnTitle").textContent="Giliran Pemain 1 — pilih tanganmu";
+  $("startBtn").disabled=true;
+  setButtonsEnabled(true);
+  setStatus("Ronde dimulai!","Pemain 1 memilih dulu. Jangan biarkan temanmu mengintip.");
+}
+function choose(choice){
+  if(!roundActive)return;
+  if(turn===1){
+    choice1=choice;
+    // Hilangkan fokus tombol dan nonaktifkan efek visual agar pilihan tidak bocor.
+    if (document.activeElement) document.activeElement.blur();
+    $("choices").classList.add("privacy-mode");
+    // Sembunyikan pilihan pemain pertama agar pemain kedua tidak bisa mengintip.
+    $("hand1").textContent="🔒";
+    $("label1").textContent="Pilihan terkunci";
+    turn=2;
+    $("turnTitle").textContent="Giliran Pemain 2 — pilih tanganmu";
+    setStatus("Pilihan Pemain 1 terkunci!","Serahkan perangkat ke Pemain 2, lalu pilih.");
+  }else if(turn===2){
+    choice2=choice;
+    revealRound();
+  }
+}
+function revealRound(){
+  roundActive=false;
+  $("choices").classList.remove("privacy-mode");
+  $("hand1").textContent=options[choice1].emoji;
+  $("hand2").textContent=options[choice2].emoji;
+  $("label1").textContent=options[choice1].label;
+  $("label2").textContent=options[choice2].label;
+  $("turnTitle").textContent="Hasil ronde";
+  setButtonsEnabled(false);
+  $("startBtn").disabled=false;
+  $("startBtn").textContent="▶ Ronde Berikutnya";
+  if(choice1===choice2){
+    setStatus("🤝 Seri!","Kalian sama-sama memilih "+options[choice1].label+".","draw");
+  }else{
+    const p1Wins=(choice1==="batu"&&choice2==="gunting")||
+      (choice1==="gunting"&&choice2==="kertas")||
+      (choice1==="kertas"&&choice2==="batu");
+    if(p1Wins){score1++;setStatus("🎉 Pemain 1 menang!",""+options[choice1].label+" mengalahkan "+options[choice2].label+".","win");}
+    else{score2++;setStatus("🎉 Pemain 2 menang!",""+options[choice2].label+" mengalahkan "+options[choice1].label+".","win");}
+    $("score1").textContent=score1;$("score2").textContent=score2;
+  }
+}
+buttons.forEach(b=>b.addEventListener("click",()=>choose(b.dataset.choice)));
+$("startBtn").addEventListener("click",beginRound);
+$("resetBtn").addEventListener("click",()=>{
+  score1=0;score2=0;turn=0;choice1=null;choice2=null;roundActive=false;
+  $("score1").textContent="0";$("score2").textContent="0";
+  $("hand1").textContent="❔";$("hand2").textContent="❔";
+  $("label1").textContent="Belum memilih";$("label2").textContent="Belum memilih";
+  $("turnTitle").textContent="Tekan mulai untuk bermain";
+  $("startBtn").disabled=false;$("startBtn").textContent="▶ Mulai Ronde";
+  $("choices").classList.remove("privacy-mode");
+  setButtonsEnabled(false);
+  setStatus("Skor direset!","Siap untuk pertandingan baru?");
+});
+setButtonsEnabled(false);
+</script>
+</body>
+</html>
